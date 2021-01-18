@@ -130,7 +130,6 @@ Matrix update_camera(Camera c,float dt){
 
 
 struct CBufferLayout{
-	RawVector cd;
 	RawMatrix cm;
 	RawMatrix pm;
 };
@@ -140,6 +139,7 @@ struct CBufferLayout{
 ID3D11Buffer* cb=NULL;
 RawMatrix pm;
 Camera c;
+Terrain t;
 
 
 
@@ -160,26 +160,25 @@ void init_editor(void){
 	float n=EPSILON;
 	float f=1000;
 	pm=raw_matrix(1/renderer_aspect_ratio,0,0,0,0,1,0,0,0,0,-2/(f-n),-(f+n)/(f-n),0,0,0,1);
-	terrain_init();
+	t=terrain_init(10,10);
 }
 
 
 
 void update_editor(double dt){
-	static float t=0;
-	t+=(float)(dt*1e-6);
+	static float tm=0;
+	tm+=(float)(dt*1e-6);
 	Matrix cm=update_camera(c,(float)(dt*1e-6));
 	if (cm==NULL){
 		return;
 	}
 	struct CBufferLayout cb_dt={
-		raw_vector(sinf(c->rx-PI_DIV_TWO)*cosf(c->ry),cosf(c->rx-PI_DIV_TWO),sinf(c->rx-PI_DIV_TWO)*sinf(c->ry),1),
 		as_raw_matrix(cm),
 		pm
 	};
 	ID3D11DeviceContext_VSSetConstantBuffers(renderer_d3_dc,0,1,&cb);
 	ID3D11DeviceContext_PSSetConstantBuffers(renderer_d3_dc,0,1,&cb);
 	update_constant_buffer(cb,(void*)&cb_dt);
-	terrain_draw();
+	terrain_draw(t);
 	free(cm);
 }
